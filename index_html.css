@@ -23,15 +23,15 @@ body { background-color:#FFFFFF; background-image: url(images/b5f5ef32c7d0144dd0
 .textstyle7 { font-size:20pt; font-family:Arial, Helvetica, sans-serif; color:#6F6F6F; font-style:italic; font-weight:bold;  }
 #text_58be145d { vertical-align: bottom; position:relative; display: inline-block; width:283px; height:43px; background:none;  }
 .textstyle8 { font-size:32pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
-#container_d849a08 { position:absolute; left:32%; top:39%; width:35%; min-height:82px; background:none;  }
+#container_d849a08 { position:absolute; left:0%; top:39%; width:100%; min-height:82px; background:none;  }
 #container_d849a08_padding { margin: 10px; display: block;  }
 #text_39841321 { vertical-align: bottom; position:relative; display: inline-block; background:none;  }
 .textstyle9 { font-size:24pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
-#text_f1669e6 { vertical-align: bottom; position:relative; display: inline-block; background:none;  }
-.textstyle10 { font-size:22pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
-#text_22ca3bc8 { vertical-align: bottom; position:relative; display: inline-block; background:none;  }
-.textstyle11 { font-size:16pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
-.textstyle12 { font-size:16pt; font-family:Arial, Helvetica, sans-serif; color:#FFFF00;  }
+#text_22ca3bc8 { position:absolute; left:50%; top:100%; width:387px; height:33px; background:none;  }
+.textstyle10 { font-size:16pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
+.textstyle11 { font-size:16pt; font-family:Arial, Helvetica, sans-serif; color:#FFFF00;  }
+#text_f1669e6 { vertical-align: bottom; position:relative; display: inline-block; width:343px; height:34px; background:none;  }
+.textstyle12 { font-size:22pt; font-family:Arial, Helvetica, sans-serif; color:#FFFFFF;  }
 #container_32d0e03e { position:absolute; left:31%; top:50%; width:39%; min-height:100px; background:none;  }
 #container_32d0e03e_padding { margin: 10px; display: block;  }
 #button_433edc8a { box-sizing: border-box; vertical-align: bottom; border-radius: 15px 0px 15px 0px; position:relative; display: inline-block; width:300px; height:80px; background-color:#676767; background: linear-gradient(to bottom, #BDBDBD, #676767); border: 2px solid #242424;  }
