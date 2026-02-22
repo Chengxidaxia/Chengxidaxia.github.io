@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复超阈值 · 快速分裂棋</title>
+    <style>
+        /* 样式与之前相同，省略以保持简洁，实际使用时保留完整样式 */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(145deg, #2b3a4a 0%, #1d2a35 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        .game-container {
+            background: #243342;
+            border-radius: 2.5rem;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.6), inset 0 0 8px rgba(255,255,240,0.1);
+            border: 1px solid #3f5567;
+            max-width: 1200px;
+            overflow-x: auto;
+        }
+        .settings {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px 20px;
+            background: #1d2b36;
+            padding: 0.8rem 1.5rem;
+            border-radius: 3rem;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(255,255,255,0.05);
+        }
+        .settings label {
+            color: #e9f2f0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        #player-select {
+            background: #2e4152;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            outline: none;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #5f7f9c;
+        }
+        #new-game-btn, #reset-btn {
+            background: #3f4f5e;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.4rem 1.5rem;
+            border-radius: 3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1b262e, 0 6px 10px black;
+            transition: 0.05s linear;
+            border: 1px solid #6a839b;
+        }
+        #new-game-btn:active, #reset-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #1b262e, 0 5px 10px black;
+        }
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #273b48;
+            padding: 0.3rem 1.2rem;
+            border-radius: 3rem;
+        }
+        .advanced-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #5f9ea0;
+            margin-right: 5px;
+        }
+        #advanced-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            background: #1d2b36;
+            padding: 0.5rem 1.2rem;
+            border-radius: 3rem;
+            margin-top: 5px;
+        }
+        #advanced-controls input[type="number"] {
+            width: 65px;
+            background: #2e4152;
+            border: 1px solid #5f7f9c;
+            color: white;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 2rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .info-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1d2b36;
+            padding: 0.9rem 2rem;
+            border-radius: 4rem;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(255,255,255,0.05);
+        }
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ececec;
+            text-shadow: 0 2px 3px black;
+        }
+        .color-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid #f5e9d8;
+            box-shadow: 0 0 0 2px #1a1f24;
+            transition: background-color 0.1s ease;
+        }
+        .color-dot.red { background: radial-gradient(circle at 35% 35%, #ff8a8a, #b81b1b); }
+        .color-dot.blue { background: radial-gradient(circle at 35% 35%, #9acbff, #1f6390); }
+        .color-dot.green { background: radial-gradient(circle at 35% 35%, #9bc158, #3e642e); }
+        .color-dot.yellow { background: radial-gradient(circle at 35% 35%, #ffe68f, #b38b2c); }
+        .board {
+            display: grid;
+            gap: 10px;
+            justify-content: center;
+            padding: 8px;
+            background: #1c2a34;
+            border-radius: 2rem;
+            box-shadow: inset 0 0 0 2px #14212b, inset 0 0 20px #00000070;
+        }
+        .cell {
+            width: 70px;
+            height: 70px;
+            background: #2c3e4e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #f0f0ea;
+            text-shadow: 0 3px 3px black;
+            box-shadow: 0 8px 0 #0f1a21, 0 10px 15px rgba(0,0,0,0.5);
+            transition: 0.05s linear;
+            cursor: pointer;
+            border: 2px solid #5d7388;
+        }
+        .cell.empty {
+            background: #1f2f3b;
+            box-shadow: inset 0 0 0 2px #314c5e, 0 8px 0 #0e1a22;
+            border: 2px solid #405a6b;
+        }
+        .cell.red { background: radial-gradient(circle at 30% 30%, #ff8f8f, #ac2f2f); border-color: #ffc8c8; }
+        .cell.blue { background: radial-gradient(circle at 30% 30%, #a7d4ff, #236bab); border-color: #c4e2ff; }
+        .cell.green { background: radial-gradient(circle at 30% 30%, #9bc158, #3e642e); border-color: #d4f0a8; }
+        .cell.yellow { background: radial-gradient(circle at 30% 30%, #ffe68f, #b38b2c); border-color: #fff0b5; }
+
+        .dot-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 4px;
+            padding: 8px;
+        }
+        .dot {
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 3px black;
+            flex-shrink: 0;
+        }
+        .number-display {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 3px 3px black;
+        }
+
+        /* 满点闪烁动画 (快速) */
+        @keyframes preExplode {
+            0% { transform: scale(1); background-color: #ffaa88; filter: brightness(1.2); }
+            30% { transform: scale(1.3); background-color: #ffaa88; filter: brightness(1.5); }
+            60% { transform: scale(1.1); background-color: #ffaa88; filter: brightness(1.2); }
+            100% { transform: scale(1); background-color: inherit; filter: brightness(1); }
+        }
+        .cell.pre-explode {
+            animation: preExplode 0.15s ease-out forwards;
+            z-index: 20;
+        }
+        /* 消失动画 */
+        @keyframes vanish {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .cell.vanish {
+            animation: vanish 0.1s ease-in forwards;
+            pointer-events: none;
+        }
+        /* 出生动画 */
+        @keyframes born {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .cell.born-anim {
+            animation: born 0.15s ease-out forwards;
+        }
+
+        .winner-message {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 1.7rem;
+            font-weight: bold;
+            background: #1f2f3b;
+            padding: 0.7rem;
+            border-radius: 3rem;
+            color: #fadfaf;
+            letter-spacing: 1px;
+            text-shadow: 0 3px 0 #0f1a1f;
+            border: 1px solid #5a7a94;
+            min-height: 4rem;
+        }
+        .footer-note {
+            color: #96adc2;
+            margin-top: 1rem;
+            font-size: 1rem;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="settings">
+        <label>👥 玩家:</label>
+        <select id="player-select">
+            <option value="2">2 人</option>
+            <option value="3">3 人</option>
+            <option value="4">4 人</option>
+        </select>
+        <div class="advanced-toggle">
+            <input type="checkbox" id="advanced-toggle"> <label for="advanced-toggle">⚙️ 高级模式</label>
+        </div>
+        <button id="new-game-btn">🚩 开始新游戏</button>
+    </div>
+    <div id="advanced-controls">
+        <label>行: <input type="number" id="board-rows" min="3" max="15" value="6"></label>
+        <label>列: <input type="number" id="board-cols" min="3" max="15" value="6"></label>
+        <label>分裂阈值: <input type="number" id="split-threshold" min="2" max="10" value="4"></label>
+    </div>
+
+    <div class="info-panel">
+        <div class="turn-indicator">
+            <span>⚡当前</span>
+            <span id="turn-dot" class="color-dot red"></span>
+            <span id="turn-text">红方</span>
+        </div>
+        <button id="reset-btn">🔄 重开</button>
+    </div>
+
+    <div id="board" class="board"></div>
+
+    <div id="winner-message" class="winner-message"></div>
+    <div class="footer-note">
+        ⚫ 开局每人轮流下一个3点棋子(仅空格) · 之后只能下在自己颜色的棋子上<br>
+        ⚫ 达阈值时先显示满点，再分裂 · 所有非空格子同色即胜
+    </div>
+</div>
+
+<script>
+    (function() {
+        const COLORS = ['red', 'blue', 'green', 'yellow'];
+        const COLOR_NAMES = { red: '红方', blue: '蓝方', green: '绿方', yellow: '黄方' };
+
+        let board = [];
+        let rows = 6, cols = 6;
+        let playerCount = 2;
+        let splitThreshold = 4;
+        let currentPlayerIndex = 0;
+        let initPhase = true;
+        let initCount = 0;
+        let gameOver = false;
+        let winner = null;
+
+        // 动画相关
+        let isAnimating = false;
+        let splitQueue = [];
+        let nextLayerQueue = [];
+        const PRE_EXPLODE_TIME = 150;
+        const VANISH_TIME = 100;
+        const BORN_TIME = 150;
+        const LAYER_DELAY = 200;
+        const STEP_DELAY = 100;
+
+        const boardEl = document.getElementById('board');
+        const turnDot = document.getElementById('turn-dot');
+        const turnText = document.getElementById('turn-text');
+        const winnerMsg = document.getElementById('winner-message');
+        const resetBtn = document.getElementById('reset-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const playerSelect = document.getElementById('player-select');
+        const advancedToggle = document.getElementById('advanced-toggle');
+        const boardRowsInput = document.getElementById('board-rows');
+        const boardColsInput = document.getElementById('board-cols');
+        const splitThresholdInput = document.getElementById('split-threshold');
+
+        function getCurrentColor() {
+            return COLORS[currentPlayerIndex];
+        }
+
+        function getBoardSizeByPlayers(count) {
+            switch(count) {
+                case 2: return { rows: 6, cols: 6 };
+                case 3: return { rows: 7, cols: 7 };
+                case 4: return { rows: 8, cols: 8 };
+                default: return { rows: 6, cols: 6 };
+            }
+        }
+
+        function checkGameOver() {
+            let firstColor = null;
+            let nonEmptyCount = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = board[r][c];
+                    if (cell !== null) {
+                        nonEmptyCount++;
+                        if (firstColor === null) {
+                            firstColor = cell.color;
+                        } else if (cell.color !== firstColor) {
+                            return null;
+                        }
+                    }
+                }
+            }
+            if (nonEmptyCount === 0) return null;
+            return firstColor;
+        }
+
+        function updateCellElement(r, c) {
+            const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+            if (!cellDiv) return;
+
+            const cell = board[r][c];
+            cellDiv.className = 'cell';
+            cellDiv.setAttribute('data-row', r);
+            cellDiv.setAttribute('data-col', c);
+
+            if (cell === null) {
+                cellDiv.classList.add('empty');
+                cellDiv.innerHTML = '';
+            } else {
+                cellDiv.classList.add(cell.color);
+                const count = cell.count;
+                if (count <= 6) {
+                    let dots = '';
+                    for (let i = 0; i < count; i++) {
+                        dots += '<span class="dot"></span>';
+                    }
+                    cellDiv.innerHTML = `<div class="dot-container">${dots}</div>`;
+                } else {
+                    cellDiv.innerHTML = `<span class="number-display">${count}</span>`;
+                }
+            }
+        }
+
+        function renderBoard() {
+            let html = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = board[r][c];
+                    let cellClass = 'cell';
+                    let innerHtml = '';
+                    if (cell === null) {
+                        cellClass += ' empty';
+                    } else {
+                        cellClass += ` ${cell.color}`;
+                        const count = cell.count;
+                        if (count <= 6) {
+                            let dots = '';
+                            for (let i = 0; i < count; i++) {
+                                dots += '<span class="dot"></span>';
+                            }
+                            innerHtml = `<div class="dot-container">${dots}</div>`;
+                        } else {
+                            innerHtml = `<span class="number-display">${count}</span>`;
+                        }
+                    }
+                    html += `<div class="${cellClass}" data-row="${r}" data-col="${c}">${innerHtml}</div>`;
+                }
+            }
+            boardEl.innerHTML = html;
+
+            const color = getCurrentColor();
+            turnDot.className = `color-dot ${color}`;
+            let playerName = COLOR_NAMES[color] || color;
+            if (initPhase) {
+                turnText.innerText = `${playerName} (放置初始3点)`;
+            } else {
+                turnText.innerText = playerName;
+            }
+
+            if (gameOver && winner) {
+                winnerMsg.innerText = `🏆  ${COLOR_NAMES[winner] || winner} 占领所有棋子，获胜！ 🏆`;
+            } else {
+                winnerMsg.innerText = '';
+            }
+        }
+
+        function startSplitAnimation(firstSplits, playerColor) {
+            if (isAnimating) return;
+            isAnimating = true;
+            splitQueue = firstSplits.map(pos => ({ ...pos, color: playerColor }));
+            nextLayerQueue = [];
+            processCurrentLayer();
+        }
+
+        function processCurrentLayer() {
+            if (splitQueue.length === 0) {
+                if (nextLayerQueue.length > 0) {
+                    splitQueue = [...nextLayerQueue];
+                    nextLayerQueue = [];
+                    setTimeout(processCurrentLayer, LAYER_DELAY);
+                } else {
+                    finishAnimation();
+                }
+                return;
+            }
+
+            const task = splitQueue.shift();
+            const { r, c, color } = task;
+
+            const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+            if (!cellDiv) {
+                setTimeout(processCurrentLayer, STEP_DELAY);
+                return;
+            }
+
+            cellDiv.classList.add('pre-explode');
+
+            setTimeout(() => {
+                cellDiv.classList.remove('pre-explode');
+                cellDiv.classList.add('vanish');
+
+                board[r][c] = null;
+                cellDiv.innerHTML = '';
+                cellDiv.classList.remove(...COLORS);
+                cellDiv.classList.add('empty');
+
+                const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                const children = [];
+
+                for (let [dr, dc] of dirs) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                        const target = board[nr][nc];
+                        // 如果目标格子已经达到阈值（即将在下一层分裂），则忽略本次叠加，避免超过阈值
+                        if (target && target.count === splitThreshold) {
+                            continue;
+                        }
+                        let newCount, newColor;
+                        if (target === null) {
+                            newCount = 1;
+                            newColor = color;
+                        } else {
+                            newCount = target.count + 1;
+                            newColor = color;
+                        }
+                        board[nr][nc] = { count: newCount, color: newColor };
+                        children.push([nr, nc, newCount, newColor]);
+                    }
+                }
+
+                children.forEach(([nr, nc, cnt, clr]) => {
+                    updateCellElement(nr, nc);
+                    const childDiv = document.querySelector(`.cell[data-row="${nr}"][data-col="${nc}"]`);
+                    if (childDiv) {
+                        childDiv.classList.add('born-anim');
+                        setTimeout(() => childDiv.classList.remove('born-anim'), BORN_TIME);
+                    }
+
+                    if (cnt === splitThreshold) {
+                        nextLayerQueue.push({ r: nr, c: nc, color: clr });
+                    }
+                });
+
+                setTimeout(() => {
+                    cellDiv.classList.remove('vanish');
+                }, VANISH_TIME);
+
+                setTimeout(processCurrentLayer, STEP_DELAY);
+            }, PRE_EXPLODE_TIME);
+        }
+
+        function finishAnimation() {
+            isAnimating = false;
+            const winnerColor = checkGameOver();
+            if (winnerColor) {
+                gameOver = true;
+                winner = winnerColor;
+            } else {
+                currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+            }
+            renderBoard();
+        }
+
+        function handleNormalMove(row, col) {
+            const cell = board[row][col];
+            if (cell === null) return;
+
+            // 如果棋子已经达到阈值，不应该存在，但以防万一
+            if (cell.count === splitThreshold) return;
+
+            // 只能下在自己颜色的棋子上
+            if (cell.color !== getCurrentColor()) {
+                return;
+            }
+
+            const newCount = cell.count + 1;
+            const newColor = getCurrentColor();
+
+            if (newCount === splitThreshold) {
+                board[row][col] = { count: newCount, color: newColor };
+                renderBoard();
+                startSplitAnimation([{ r: row, c: col }], newColor);
+            } else {
+                board[row][col] = { count: newCount, color: newColor };
+                const winnerColor = checkGameOver();
+                if (winnerColor) {
+                    gameOver = true;
+                    winner = winnerColor;
+                } else {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+                }
+                renderBoard();
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (gameOver || isAnimating) return;
+
+            if (initPhase) {
+                if (board[row][col] !== null) {
+                    return;
+                }
+                board[row][col] = { count: 3, color: getCurrentColor() };
+
+                initCount++;
+                if (initCount >= playerCount) {
+                    initPhase = false;
+                    currentPlayerIndex = 0;
+                } else {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+                }
+                renderBoard();
+                return;
+            }
+
+            if (board[row][col] === null) {
+                return;
+            }
+
+            handleNormalMove(row, col);
+        }
+
+        function resetGame() {
+            if (isAnimating) return;
+
+            playerCount = parseInt(playerSelect.value, 10);
+            const advanced = advancedToggle.checked;
+
+            if (advanced) {
+                rows = parseInt(boardRowsInput.value, 10);
+                cols = parseInt(boardColsInput.value, 10);
+                splitThreshold = parseInt(splitThresholdInput.value, 10);
+                if (rows < 3) rows = 3;
+                if (cols < 3) cols = 3;
+                if (rows > 15) rows = 15;
+                if (cols > 15) cols = 15;
+                if (splitThreshold < 2) splitThreshold = 2;
+                if (splitThreshold > 10) splitThreshold = 10;
+                boardRowsInput.value = rows;
+                boardColsInput.value = cols;
+                splitThresholdInput.value = splitThreshold;
+            } else {
+                const size = getBoardSizeByPlayers(playerCount);
+                rows = size.rows;
+                cols = size.cols;
+                splitThreshold = 4;
+                boardRowsInput.value = rows;
+                boardColsInput.value = cols;
+                splitThresholdInput.value = splitThreshold;
+            }
+
+            board = Array.from({ length: rows }, () => Array(cols).fill(null));
+            currentPlayerIndex = 0;
+            initPhase = true;
+            initCount = 0;
+            gameOver = false;
+            winner = null;
+            isAnimating = false;
+            splitQueue = [];
+            nextLayerQueue = [];
+
+            boardEl.style.gridTemplateColumns = `repeat(${cols}, 70px)`;
+            renderBoard();
+        }
+
+        boardEl.addEventListener('click', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const row = parseInt(cell.dataset.row, 10);
+            const col = parseInt(cell.dataset.col, 10);
+            if (isNaN(row) || isNaN(col)) return;
+            handleCellClick(row, col);
+        });
+
+        resetBtn.addEventListener('click', resetGame);
+        newGameBtn.addEventListener('click', resetGame);
+
+        advancedToggle.addEventListener('change', () => {});
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                resetGame();
+                e.preventDefault();
+            }
+        });
+
+        resetGame();
+    })();
+</script>
+</body>
+</html>
