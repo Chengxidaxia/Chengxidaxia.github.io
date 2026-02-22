@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- 视口设置：使页面宽度等于设备宽度，初始缩放1，允许用户缩放 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>智斗棋</title>
     <style>
@@ -27,7 +26,7 @@
             box-shadow: 0 25px 40px rgba(0,0,0,0.6), inset 0 0 8px rgba(255,255,240,0.1);
             border: 1px solid #3f5567;
             max-width: 1200px;
-            width: fit-content;
+            width: 100%;
             margin: 0 auto;
         }
         .game-title {
@@ -159,16 +158,17 @@
             background: #1c2a34;
             border-radius: 2rem;
             box-shadow: inset 0 0 0 2px #14212b, inset 0 0 20px #00000070;
+            width: 100%;
         }
         .cell {
-            width: clamp(44px, min(9vw, 70px), 70px);
-            height: clamp(44px, min(9vw, 70px), 70px);
+            width: 100%;
+            aspect-ratio: 1/1;
             background: #2c3e4e;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1.2rem, 4vw, 2.2rem);
+            font-size: clamp(1rem, 5vw, 2.2rem);
             font-weight: 700;
             color: #f0f0ea;
             text-shadow: 0 3px 3px black;
@@ -194,19 +194,19 @@
             align-items: center;
             width: 100%;
             height: 100%;
-            gap: clamp(2px, 0.8vw, 5px);
-            padding: clamp(4px, 1vw, 8px);
+            gap: clamp(2px, 1vw, 5px);
+            padding: clamp(4px, 1.5vw, 8px);
         }
         .dot {
-            width: clamp(10px, 3vw, 18px);
-            height: clamp(10px, 3vw, 18px);
+            width: clamp(8px, 3vw, 18px);
+            height: clamp(8px, 3vw, 18px);
             background-color: white;
             border-radius: 50%;
             box-shadow: 0 2px 3px black;
             flex-shrink: 0;
         }
         .number-display {
-            font-size: clamp(1.2rem, 4vw, 2.2rem);
+            font-size: clamp(1rem, 5vw, 2.2rem);
             font-weight: 700;
             color: white;
             text-shadow: 0 3px 3px black;
@@ -640,7 +640,8 @@
             splitQueue = [];
             nextLayerQueue = [];
 
-            boardEl.style.gridTemplateColumns = `repeat(${cols}, minmax(44px, min(9vw, 70px)))`;
+            // 使用 fr 单位让列自适应宽度，同时保证最小宽度 40px
+            boardEl.style.gridTemplateColumns = `repeat(${cols}, minmax(40px, 1fr))`;
             renderBoard();
         }
 
