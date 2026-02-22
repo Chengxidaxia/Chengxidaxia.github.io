@@ -128,7 +128,14 @@
             border-radius: 4rem;
             margin-bottom: 2rem;
             box-shadow: inset 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(255,255,255,0.05);
+            transition: background 0.3s ease;
         }
+        /* 信息面板玩家颜色背景 */
+        .info-panel.player-red { background: #8b4b4b; }
+        .info-panel.player-blue { background: #4a6b8b; }
+        .info-panel.player-green { background: #5b8b4a; }
+        .info-panel.player-yellow { background: #8b8b4a; }
+
         .turn-indicator {
             display: flex;
             align-items: center;
@@ -160,33 +167,65 @@
             box-shadow: inset 0 0 0 2px #14212b, inset 0 0 20px #00000070;
             width: 100%;
         }
+        /* 格子：圆角正方形，默认中性背景 */
         .cell {
+            position: relative;
             width: 100%;
             aspect-ratio: 1/1;
-            background: #2c3e4e;
-            border-radius: 50%;
+            background: #1f2f3b;  /* 中性深灰 */
+            border-radius: clamp(8px, 2vw, 16px);
+            box-shadow: 0 8px 0 #0f1a21, 0 10px 15px rgba(0,0,0,0.5);
+            cursor: pointer;
+            border: 3px solid #405a6b;
+            transition: 0.05s linear;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1rem, 5vw, 2.2rem);
-            font-weight: 700;
-            color: #f0f0ea;
-            text-shadow: 0 3px 3px black;
-            box-shadow: 0 8px 0 #0f1a21, 0 10px 15px rgba(0,0,0,0.5);
-            transition: 0.05s linear;
-            cursor: pointer;
-            border: 2px solid #5d7388;
         }
-        .cell.empty {
-            background: #1f2f3b;
-            box-shadow: inset 0 0 0 2px #314c5e, 0 8px 0 #0e1a22;
-            border: 2px solid #405a6b;
+        /* 当前玩家棋子所在格子内部高亮（亮色背景） */
+        .cell.red.current-player { background: #aa5555; }
+        .cell.blue.current-player { background: #5577aa; }
+        .cell.green.current-player { background: #77aa55; }
+        .cell.yellow.current-player { background: #aaaa55; }
+        .cell.current-player {
+            border-color: #ffffff88;
         }
-        .cell.red { background: radial-gradient(circle at 30% 30%, #ff8f8f, #ac2f2f); border-color: #ffc8c8; }
-        .cell.blue { background: radial-gradient(circle at 30% 30%, #a7d4ff, #236bab); border-color: #c4e2ff; }
-        .cell.green { background: radial-gradient(circle at 30% 30%, #9bc158, #3e642e); border-color: #d4f0a8; }
-        .cell.yellow { background: radial-gradient(circle at 30% 30%, #ffe68f, #b38b2c); border-color: #fff0b5; }
 
+        /* 圆形棋子 + 白色描边 */
+        .piece {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff8f8f, #ac2f2f);
+            box-shadow: 0 0 0 3px white, inset 0 -4px 4px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .cell.red .piece { background: radial-gradient(circle at 30% 30%, #ff8f8f, #ac2f2f); }
+        .cell.blue .piece { background: radial-gradient(circle at 30% 30%, #a7d4ff, #236bab); }
+        .cell.green .piece { background: radial-gradient(circle at 30% 30%, #9bc158, #3e642e); }
+        .cell.yellow .piece { background: radial-gradient(circle at 30% 30%, #ffe68f, #b38b2c); }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: white;
+            text-shadow: 0 2px 3px black;
+            font-weight: 700;
+        }
+
+        .cell.empty .piece,
+        .cell.empty .content {
+            display: none;
+        }
+
+        /* 圆点容器 */
         .dot-container {
             display: flex;
             flex-wrap: wrap;
@@ -194,19 +233,24 @@
             align-items: center;
             width: 100%;
             height: 100%;
-            gap: clamp(2px, 1vw, 5px);
-            padding: clamp(4px, 1.5vw, 8px);
+            gap: clamp(2px, 0.8vw, 5px);
+            padding: clamp(4px, 1vw, 8px);
+        }
+        .dot-container.dot-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            justify-items: center;
         }
         .dot {
-            width: clamp(8px, 3vw, 18px);
-            height: clamp(8px, 3vw, 18px);
+            width: clamp(8px, 3vw, 16px);
+            height: clamp(8px, 3vw, 16px);
             background-color: white;
             border-radius: 50%;
             box-shadow: 0 2px 3px black;
-            flex-shrink: 0;
         }
         .number-display {
-            font-size: clamp(1rem, 5vw, 2.2rem);
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
             font-weight: 700;
             color: white;
             text-shadow: 0 3px 3px black;
@@ -214,12 +258,12 @@
 
         /* 满点闪烁动画 (快速) */
         @keyframes preExplode {
-            0% { transform: scale(1); background-color: #ffaa88; filter: brightness(1.2); }
-            30% { transform: scale(1.3); background-color: #ffaa88; filter: brightness(1.5); }
-            60% { transform: scale(1.1); background-color: #ffaa88; filter: brightness(1.2); }
-            100% { transform: scale(1); background-color: inherit; filter: brightness(1); }
+            0% { transform: scale(1); filter: brightness(1.2); }
+            30% { transform: scale(1.3); filter: brightness(1.5); }
+            60% { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
         }
-        .cell.pre-explode {
+        .cell.pre-explode .piece {
             animation: preExplode 0.15s ease-out forwards;
             z-index: 20;
         }
@@ -228,7 +272,7 @@
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0); opacity: 0; }
         }
-        .cell.vanish {
+        .cell.vanish .piece {
             animation: vanish 0.1s ease-in forwards;
             pointer-events: none;
         }
@@ -238,7 +282,7 @@
             70% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .cell.born-anim {
+        .cell.born-anim .piece {
             animation: born 0.15s ease-out forwards;
         }
 
@@ -286,7 +330,7 @@
         <label>分裂阈值: <input type="number" id="split-threshold" min="2" max="10" value="4"></label>
     </div>
 
-    <div class="info-panel">
+    <div class="info-panel" id="info-panel">
         <div class="turn-indicator">
             <span>⚡当前</span>
             <span id="turn-dot" class="color-dot red"></span>
@@ -308,6 +352,12 @@
     (function() {
         const COLORS = ['red', 'blue', 'green', 'yellow'];
         const COLOR_NAMES = { red: '红方', blue: '蓝方', green: '绿方', yellow: '黄方' };
+        const PANEL_CLASSES = {
+            red: 'player-red',
+            blue: 'player-blue',
+            green: 'player-green',
+            yellow: 'player-yellow'
+        };
 
         let board = [];
         let rows = 6, cols = 6;
@@ -319,15 +369,14 @@
         let gameOver = false;
         let winner = null;
 
-        // 动画相关
+        let startPlayerIndex = 0;
+
         let isAnimating = false;
-        let splitQueue = [];
-        let nextLayerQueue = [];
+        let nextStepTasks = [];
         const PRE_EXPLODE_TIME = 150;
         const VANISH_TIME = 100;
         const BORN_TIME = 150;
-        const LAYER_DELAY = 200;
-        const STEP_DELAY = 100;
+        const STEP_DELAY = 200;
 
         const boardEl = document.getElementById('board');
         const turnDot = document.getElementById('turn-dot');
@@ -340,6 +389,7 @@
         const boardRowsInput = document.getElementById('board-rows');
         const boardColsInput = document.getElementById('board-cols');
         const splitThresholdInput = document.getElementById('split-threshold');
+        const infoPanel = document.getElementById('info-panel');
 
         function getCurrentColor() {
             return COLORS[currentPlayerIndex];
@@ -356,12 +406,10 @@
 
         function checkGameOver() {
             let firstColor = null;
-            let nonEmptyCount = 0;
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const cell = board[r][c];
                     if (cell !== null) {
-                        nonEmptyCount++;
                         if (firstColor === null) {
                             firstColor = cell.color;
                         } else if (cell.color !== firstColor) {
@@ -370,8 +418,63 @@
                     }
                 }
             }
-            if (nonEmptyCount === 0) return null;
             return firstColor;
+        }
+
+        function getNextPlayerWithPieces(startIdx) {
+            let count = 0;
+            let idx = startIdx % playerCount;
+            while (count < playerCount) {
+                let hasPiece = false;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const cell = board[r][c];
+                        if (cell && cell.color === COLORS[idx]) {
+                            hasPiece = true;
+                            break;
+                        }
+                    }
+                    if (hasPiece) break;
+                }
+                if (hasPiece) return idx;
+                idx = (idx + 1) % playerCount;
+                count++;
+            }
+            return -1;
+        }
+
+        function safeSwitchPlayer() {
+            const nextIdx = getNextPlayerWithPieces((currentPlayerIndex + 1) % playerCount);
+            if (nextIdx === -1) {
+                gameOver = true;
+                winner = null;
+            } else {
+                currentPlayerIndex = nextIdx;
+            }
+        }
+
+        // 更新信息面板背景色
+        function updatePanelBackground() {
+            if (!initPhase && !gameOver && !isAnimating) {
+                const color = getCurrentColor();
+                infoPanel.className = 'info-panel ' + (PANEL_CLASSES[color] || '');
+            } else {
+                infoPanel.className = 'info-panel';
+            }
+        }
+
+        // 生成圆点HTML
+        function generateDotHtml(count) {
+            if (count <= 6) {
+                let dots = '';
+                for (let i = 0; i < count; i++) {
+                    dots += '<span class="dot"></span>';
+                }
+                const gridClass = count === 4 ? ' dot-grid-4' : '';
+                return `<div class="dot-container${gridClass}">${dots}</div>`;
+            } else {
+                return `<span class="number-display">${count}</span>`;
+            }
         }
 
         function updateCellElement(r, c) {
@@ -388,21 +491,18 @@
                 cellDiv.innerHTML = '';
             } else {
                 cellDiv.classList.add(cell.color);
-                const count = cell.count;
-                if (count <= 6) {
-                    let dots = '';
-                    for (let i = 0; i < count; i++) {
-                        dots += '<span class="dot"></span>';
-                    }
-                    cellDiv.innerHTML = `<div class="dot-container">${dots}</div>`;
-                } else {
-                    cellDiv.innerHTML = `<span class="number-display">${count}</span>`;
+                if (!initPhase && cell.color === getCurrentColor()) {
+                    cellDiv.classList.add('current-player');
                 }
+                const displayCount = Math.min(cell.count, splitThreshold);
+                const contentHtml = generateDotHtml(displayCount);
+                cellDiv.innerHTML = `<div class="piece"></div><div class="content">${contentHtml}</div>`;
             }
         }
 
         function renderBoard() {
             let html = '';
+            const currentColor = getCurrentColor();
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const cell = board[r][c];
@@ -412,16 +512,12 @@
                         cellClass += ' empty';
                     } else {
                         cellClass += ` ${cell.color}`;
-                        const count = cell.count;
-                        if (count <= 6) {
-                            let dots = '';
-                            for (let i = 0; i < count; i++) {
-                                dots += '<span class="dot"></span>';
-                            }
-                            innerHtml = `<div class="dot-container">${dots}</div>`;
-                        } else {
-                            innerHtml = `<span class="number-display">${count}</span>`;
+                        if (!initPhase && cell.color === currentColor) {
+                            cellClass += ' current-player';
                         }
+                        const displayCount = Math.min(cell.count, splitThreshold);
+                        const contentHtml = generateDotHtml(displayCount);
+                        innerHtml = `<div class="piece"></div><div class="content">${contentHtml}</div>`;
                     }
                     html += `<div class="${cellClass}" data-row="${r}" data-col="${c}">${innerHtml}</div>`;
                 }
@@ -442,91 +538,161 @@
             } else {
                 winnerMsg.innerText = '';
             }
+
+            updatePanelBackground();
         }
 
-        function startSplitAnimation(firstSplits, playerColor) {
+        function startSplitAnimation(firstStepTasks, playerColor) {
             if (isAnimating) return;
             isAnimating = true;
-            splitQueue = firstSplits.map(pos => ({ ...pos, color: playerColor }));
-            nextLayerQueue = [];
-            processCurrentLayer();
+            processStep(firstStepTasks, playerColor);
         }
 
-        function processCurrentLayer() {
-            if (splitQueue.length === 0) {
-                if (nextLayerQueue.length > 0) {
-                    splitQueue = [...nextLayerQueue];
-                    nextLayerQueue = [];
-                    setTimeout(processCurrentLayer, LAYER_DELAY);
-                } else {
-                    finishAnimation();
-                }
+        function processStep(tasks, color) {
+            if (tasks.length === 0) {
+                finishAnimation();
                 return;
             }
 
-            const task = splitQueue.shift();
-            const { r, c, color } = task;
-
-            const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
-            if (!cellDiv) {
-                setTimeout(processCurrentLayer, STEP_DELAY);
-                return;
-            }
-
-            cellDiv.classList.add('pre-explode');
+            tasks.forEach(({r, c}) => {
+                const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                if (cellDiv) cellDiv.classList.add('pre-explode');
+            });
 
             setTimeout(() => {
-                cellDiv.classList.remove('pre-explode');
-                cellDiv.classList.add('vanish');
+                tasks.forEach(({r, c}) => {
+                    const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                    if (cellDiv) cellDiv.classList.remove('pre-explode');
+                });
 
-                board[r][c] = null;
-                cellDiv.innerHTML = '';
-                cellDiv.classList.remove(...COLORS);
-                cellDiv.classList.add('empty');
+                const allSources = tasks.map(t => [t.r, t.c]);
 
-                const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-                const children = [];
+                // 先清空所有源格子
+                allSources.forEach(([r, c]) => {
+                    board[r][c] = null;
+                });
 
-                for (let [dr, dc] of dirs) {
-                    const nr = r + dr;
-                    const nc = c + dc;
-                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                        const target = board[nr][nc];
-                        // 如果目标格子已经达到阈值（即将在下一层分裂），则忽略本次叠加，避免超过阈值
-                        if (target && target.count === splitThreshold) {
-                            continue;
+                let targetCoords = []; // 需要更新的目标格子坐标（去重）
+                const children = [];    // 用于记录所有更新的目标格子 (r,c,count,color)
+
+                // ---- 新bug：当>=4个源格子且位于3x3范围内时，所有目标格子直接变成阈值 ----
+                const sourceCount = allSources.length;
+                let megaBugTriggered = false;
+                if (sourceCount >= 4) {
+                    const rowsList = allSources.map(([r]) => r);
+                    const colsList = allSources.map(([c]) => c);
+                    const minR = Math.min(...rowsList);
+                    const maxR = Math.max(...rowsList);
+                    const minC = Math.min(...colsList);
+                    const maxC = Math.max(...colsList);
+                    if (maxR - minR <= 2 && maxC - minC <= 2) {
+                        megaBugTriggered = true;
+                    }
+                }
+
+                if (megaBugTriggered) {
+                    // 直接为每个源格子的四个方向设置阈值棋子
+                    allSources.forEach(([r, c]) => {
+                        const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                        dirs.forEach(([dr, dc]) => {
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                                board[nr][nc] = { count: splitThreshold, color: color };
+                                children.push([nr, nc, splitThreshold, color]);
+                            }
+                        });
+                    });
+                    // 去重
+                    const seen = new Set();
+                    targetCoords = children
+                        .map(([nr, nc]) => ({ key: nr+','+nc, coord: [nr, nc] }))
+                        .filter(({key}) => !seen.has(key) && seen.add(key))
+                        .map(({coord}) => coord);
+                } else {
+                    // 正常叠加计算
+                    const targetMap = new Map(); // key: "r,c" -> 叠加次数
+                    allSources.forEach(([r, c]) => {
+                        const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                        dirs.forEach(([dr, dc]) => {
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                                const key = nr + ',' + nc;
+                                targetMap.set(key, (targetMap.get(key) || 0) + 1);
+                            }
+                        });
+                    });
+
+                    targetCoords = Array.from(targetMap.keys()).map(k => k.split(',').map(Number));
+
+                    // 旧bug：空格子被三个方向击中时，多加一点
+                    targetCoords.forEach(([nr, nc]) => {
+                        const key = nr + ',' + nc;
+                        const addCount = targetMap.get(key);
+                        if (board[nr][nc] === null && addCount === 3) {
+                            targetMap.set(key, addCount + 1);
                         }
+                    });
+
+                    // 更新所有目标格子
+                    targetCoords.forEach(([nr, nc]) => {
+                        const addCount = targetMap.get(nr + ',' + nc);
+                        const current = board[nr][nc];
                         let newCount, newColor;
-                        if (target === null) {
-                            newCount = 1;
+                        if (current === null) {
+                            newCount = addCount;
                             newColor = color;
                         } else {
-                            newCount = target.count + 1;
+                            newCount = current.count + addCount;
                             newColor = color;
                         }
                         board[nr][nc] = { count: newCount, color: newColor };
                         children.push([nr, nc, newCount, newColor]);
-                    }
+                    });
                 }
 
-                children.forEach(([nr, nc, cnt, clr]) => {
-                    updateCellElement(nr, nc);
-                    const childDiv = document.querySelector(`.cell[data-row="${nr}"][data-col="${nc}"]`);
-                    if (childDiv) {
-                        childDiv.classList.add('born-anim');
-                        setTimeout(() => childDiv.classList.remove('born-anim'), BORN_TIME);
-                    }
+                // 更新DOM并添加动画
+                allSources.forEach(([r, c]) => {
+                    updateCellElement(r, c);
+                    const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                    if (cellDiv) cellDiv.classList.add('vanish');
+                });
 
-                    if (cnt === splitThreshold) {
-                        nextLayerQueue.push({ r: nr, c: nc, color: clr });
+                targetCoords.forEach(([nr, nc]) => {
+                    updateCellElement(nr, nc);
+                    const cellDiv = document.querySelector(`.cell[data-row="${nr}"][data-col="${nc}"]`);
+                    if (cellDiv) cellDiv.classList.add('born-anim');
+                });
+
+                // 收集下一层任务（点数 >= 阈值）
+                const nextTasks = [];
+                const seen = new Set();
+                targetCoords.forEach(([nr, nc]) => {
+                    const cell = board[nr][nc];
+                    if (cell && cell.count >= splitThreshold) {
+                        const key = nr + ',' + nc;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            nextTasks.push({ r: nr, c: nc });
+                        }
                     }
                 });
 
                 setTimeout(() => {
-                    cellDiv.classList.remove('vanish');
+                    allSources.forEach(([r, c]) => {
+                        const cellDiv = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                        if (cellDiv) cellDiv.classList.remove('vanish');
+                    });
                 }, VANISH_TIME);
 
-                setTimeout(processCurrentLayer, STEP_DELAY);
+                if (nextTasks.length > 0) {
+                    setTimeout(() => {
+                        processStep(nextTasks, color);
+                    }, STEP_DELAY);
+                } else {
+                    finishAnimation();
+                }
             }, PRE_EXPLODE_TIME);
         }
 
@@ -537,7 +703,7 @@
                 gameOver = true;
                 winner = winnerColor;
             } else {
-                currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+                safeSwitchPlayer();
             }
             renderBoard();
         }
@@ -545,19 +711,13 @@
         function handleNormalMove(row, col) {
             const cell = board[row][col];
             if (cell === null) return;
-
-            // 如果棋子已经达到阈值，不应该存在，但以防万一
             if (cell.count === splitThreshold) return;
-
-            // 只能下在自己颜色的棋子上
-            if (cell.color !== getCurrentColor()) {
-                return;
-            }
+            if (cell.color !== getCurrentColor()) return;
 
             const newCount = cell.count + 1;
             const newColor = getCurrentColor();
 
-            if (newCount === splitThreshold) {
+            if (newCount >= splitThreshold) {
                 board[row][col] = { count: newCount, color: newColor };
                 renderBoard();
                 startSplitAnimation([{ r: row, c: col }], newColor);
@@ -568,7 +728,7 @@
                     gameOver = true;
                     winner = winnerColor;
                 } else {
-                    currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+                    safeSwitchPlayer();
                 }
                 renderBoard();
             }
@@ -578,15 +738,13 @@
             if (gameOver || isAnimating) return;
 
             if (initPhase) {
-                if (board[row][col] !== null) {
-                    return;
-                }
+                if (board[row][col] !== null) return;
                 board[row][col] = { count: 3, color: getCurrentColor() };
 
                 initCount++;
                 if (initCount >= playerCount) {
                     initPhase = false;
-                    currentPlayerIndex = 0;
+                    currentPlayerIndex = startPlayerIndex;
                 } else {
                     currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
                 }
@@ -594,10 +752,7 @@
                 return;
             }
 
-            if (board[row][col] === null) {
-                return;
-            }
-
+            if (board[row][col] === null) return;
             handleNormalMove(row, col);
         }
 
@@ -631,16 +786,14 @@
             }
 
             board = Array.from({ length: rows }, () => Array(cols).fill(null));
-            currentPlayerIndex = 0;
+            startPlayerIndex = Math.floor(Math.random() * playerCount);
+            currentPlayerIndex = startPlayerIndex;
             initPhase = true;
             initCount = 0;
             gameOver = false;
             winner = null;
             isAnimating = false;
-            splitQueue = [];
-            nextLayerQueue = [];
 
-            // 使用 fr 单位让列自适应宽度，同时保证最小宽度 40px
             boardEl.style.gridTemplateColumns = `repeat(${cols}, minmax(40px, 1fr))`;
             renderBoard();
         }
